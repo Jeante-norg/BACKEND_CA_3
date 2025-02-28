@@ -51,10 +51,10 @@ app.get("/profile", (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
+    const verified = jwt.verify(token, SECRET_KEY);
     return res
       .status(200)
-      .json({ message: "Welcome to your profile!", user: decoded.username });
+      .json({ message: "Welcome to your profile!", user: verified.username });
   } catch (error) {
     return res.status(401).json({ message: "unauthorized" });
   }
@@ -68,8 +68,8 @@ app.get("/admin-login", (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    if (decoded.role !== "admin") {
+    const verified = jwt.verify(token, SECRET_KEY);
+    if (verified.role !== "admin") {
       return res.status(401).json({ error: "forbidden" });
     }
     return res.status(200).json({ message: "Welcome to the admin dashboard!" });
