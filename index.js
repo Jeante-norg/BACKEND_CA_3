@@ -1,6 +1,9 @@
-import express from "express";
-import jwt from "jsonwebtoken";
-import cookieParser from "cookie-parser";
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const app = express();
+app.use(express.json());
+app.use(cookieParser());
 
 const port = 3001;
 
@@ -10,40 +13,40 @@ var users = [
   { username: "admin", password: "admin123", role: "admin" },
 ];
 
-const app = express();
-app.use(express.json());
-app.use(cookieParser());
-
 app.post("/login", (req, res) => {
   const { username, password, role } = req.body;
+  try {
+    const user = users.find((u) => {
+      return (
+        u.username === username && u.password === password && u.role === role
+      );
+    });
 
-  const user = users.find((u) => {
-    return (
-      u.username === username && u.password === password && u.role === role
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    var token = jwt.sign(
+      { username: user.username, role: user.role },
+      SECRET_KEY,
+      { expiresIn: "15m" }
     );
-  });
+    console.log(token);
 
-  if (!user) {
-    return res.status(401).json({ message: "Invalid credentials" });
+    res.cookie("auth_token", token, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 60 * 1000 * 15,
+    });
+
+    return res.status(200).json({ message: "Login successful" });
+  } catch (error) {
+    console.log({ message: error.message });
   }
-
-  const token = jwt.sign(
-    { username: user.username, role: user.role },
-    SECRET_KEY,
-    { expiresIn: "15m" }
-  );
-
-  res.cookie("auth_token", token, {
-    httpOnly: true,
-    secure: true,
-    maxAge: 60 * 1000 * 15,
-  });
-
-  return res.status(200).json({ message: "Login successful" });
 });
 
 app.get("/profile", (req, res) => {
-  const token = req.cookies.auth_token;
+  var token = req.cookies.auth_token;
   console.log(token);
 
   if (!token) {
@@ -61,7 +64,7 @@ app.get("/profile", (req, res) => {
 });
 
 app.get("/admin-login", (req, res) => {
-  const token = req.cookies.auth_token;
+  var token = req.cookies.auth_token;
 
   if (!token) {
     return res.status(401).json({ message: "unauthorized" });
