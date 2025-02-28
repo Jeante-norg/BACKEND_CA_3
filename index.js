@@ -33,7 +33,7 @@ app.post("/login", (req, res) => {
     { expiresIn: "15m" }
   );
 
-  res.cookie("auth-token", token, {
+  res.cookie("auth_token", token, {
     httpOnly: true,
     secure: true,
     maxAge: 60 * 1000 * 15,
